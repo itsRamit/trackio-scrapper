@@ -30,5 +30,5 @@ async function scrapeAmazonProduct(url){
     }
 }
 
-scrapeAmazonProduct('https://www.amazon.in/gp/product/B0CY2QL1JR/ref=s9_bw_cg_BBTABBAU_3a1_w');
+module.exports = {scrapeAmazonProduct}
 
