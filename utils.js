@@ -65,14 +65,11 @@
   }
   
   module.exports = {
-    Notification,
     extractPrice,
     extractCurrency,
-    extractDescription,
     getHighestPrice,
     getLowestPrice,
     getAveragePrice,
-    getEmailNotifType,
     formatNumber,
   };
   
