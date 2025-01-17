@@ -1,39 +1,19 @@
-const {scrapeAmazonProduct} = require('./scrapper/amazonScrapper');
-const {connectToDB} = require('./config/db');
-const {Product} = require('./model/productModel');
-const {getLowestPrice, getAveragePrice, getHighestPrice} = require('./utils');
+const express = require('express');
+const { connectToDB } = require('./config/db');
+const productRoutes = require('./routes/productRoutes');
 
-async function scrapeAndStoreProduct(productUrl){
-    if(!productUrl) return;
+const app = express();
+const PORT = 3001;
 
-    try {
-        connectToDB();
-        const amazonData = await scrapeAmazonProduct(productUrl);
-        let product = amazonData;
+// Middlewares
+app.use(express.json());
 
-        const existingProduct = await Product.findOne({url: amazonData.url});
-        if(existingProduct){
-            const updatedPriceHistory = [
-                ...existingProduct.priceHistory,
-                {price: amazonData.price}
-            ]
+// Connect to DB
+connectToDB();
 
-            product = {
-                ...amazonData,
-                priceHistory: updatedPriceHistory,
-                lowestPrice: getLowestPrice(updatedPriceHistory),
-                highestPrice: getHighestPrice(updatedPriceHistory),
-                averagePrice: getAveragePrice(updatedPriceHistory),
-            }
-        }
-        const newProduct = await Product.findOneAndUpdate(
-            {url: amazonData.url},
-            product,
-            { upsert: true, new: true}
-        )
-    } catch (error) {
-        throw error
-    }
-}
+// Routes
+app.use('/api', productRoutes);
 
-scrapeAndStoreProduct('https://www.amazon.in/dp/B0CHZ16M8N/ref=sspa_dk_detail_2?psc=1&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM')
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
