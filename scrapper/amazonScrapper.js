@@ -21,7 +21,8 @@ async function scrapeAmazonProduct(url){
             priceHistory : [],   
             outOfStock,
             lowestPrice : parseInt(price.replace(/,/g, ""), 10),
-            highestPrice : parseInt(price.replace(/,/g, ""), 10)
+            highestPrice : parseInt(price.replace(/,/g, ""), 10),
+            averagePrice : parseInt(price.replace(/,/g, ""), 10),
         }
         console.log(data)
         return data;
