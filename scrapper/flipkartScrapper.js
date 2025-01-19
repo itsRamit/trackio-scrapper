@@ -17,6 +17,7 @@ async function scrapeFlipkartProduct(url){
         const imageUrl = $('img.DByuf4.IZexXJ.jLEJ7H').attr('src') || $('img._53J4C-.utBuJY').attr('src');
         const data = {
             url,
+            platform: "flipkart",
             title,
             price : parseInt(price.replace(/₹|,/g, ''), 10),
             image : imageUrl,

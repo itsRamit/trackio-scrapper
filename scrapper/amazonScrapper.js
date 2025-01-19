@@ -8,13 +8,14 @@ async function scrapeAmazonProduct(url){
         const response = await axios.get(url);
         const $ = cheerio.load(response.data);
         const title = $('#productTitle').text().trim();
-        const price = $('.priceToPay span.a-price-whole').text().trim() || $('.a.size.base.a-color-price').text().trim() || $('.a-button-selected .a-color-base').text().trim() || $('.a-price.a-text-price').text().trim();
+        const price = $('.priceToPay span.a-price-whole').text().trim() || $('.a.size.base.a-color-price').text().trim() || $('.a-button-selected .a-color-base').text().trim() || $('.a-price.a-text-price').text().trim() || '0';
         const outOfStock = $("#avaibility span").text().trim().toLowerCase() === 'currently unavailable';
         const images = $('#imgBlkFront').attr('data-a-dynamic-image') || $('#landingImage').attr('data-a-dynamic-image') || '{}';
         const imageUrls = Object.keys(JSON.parse(images));
         
         const data = {
             url,
+            platform: "amazon",
             title,
             price : parseInt(price.replace(/,/g, ""), 10),
             image : imageUrls[0],
