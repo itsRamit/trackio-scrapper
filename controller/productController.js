@@ -1,55 +1,91 @@
 const { scrapeAmazonProduct } = require('../scrapper/amazonScrapper');
+const { scrapeFlipkartProduct } = require('../scrapper/flipkartScrapper');
 const { connectToDB } = require('../config/db');
 const { Product } = require('../model/productModel');
 const { getLowestPrice, getAveragePrice, getHighestPrice } = require('../utils');
 
-// Controller Function for Scraping and Storing Product
 const scrapeAndStoreProduct = async (req, res) => {
-    const { productUrl } = req.body; // Extract product URL from request body
+    const { amazonUrl, flipkartUrl } = req.body; 
 
-    if (!productUrl) {
+    if (!amazonUrl && !flipkartUrl) {
         return res.status(400).json({ message: 'Product URL is required' });
     }
 
     try {
-        connectToDB(); // Connect to the database
+        connectToDB();
 
-        // Scrape product data from Amazon
-        const amazonData = await scrapeAmazonProduct(productUrl);
-        let product = amazonData;
+        if(amazonUrl){
+            try {
+                const amazonData = await scrapeAmazonProduct(amazonUrl);
+                let product = amazonData;
 
-        // Check if the product already exists in the database
-        const existingProduct = await Product.findOne({ url: amazonData.url });
-        if (existingProduct) {
-            const updatedPriceHistory = [
-                ...existingProduct.priceHistory,
-                { price: amazonData.price }
-            ];
+                if(!amazonData.outOfStock && amazonData.price != 0){
+                    const existingProduct = await Product.findOne({ url: amazonData.url });
+                    if (existingProduct) {
+                        const updatedPriceHistory = [
+                            ...existingProduct.priceHistory,
+                            { price: amazonData.price }
+                        ];
 
-            product = {
-                ...amazonData,
-                priceHistory: updatedPriceHistory,
-                lowestPrice: getLowestPrice(updatedPriceHistory),
-                highestPrice: getHighestPrice(updatedPriceHistory),
-                averagePrice: getAveragePrice(updatedPriceHistory),
-            };
+                        product = {
+                            ...amazonData,
+                            priceHistory: updatedPriceHistory,
+                            lowestPrice: getLowestPrice(updatedPriceHistory),
+                            highestPrice: getHighestPrice(updatedPriceHistory),
+                            averagePrice: getAveragePrice(updatedPriceHistory),
+                        };
+                    }
+
+                    const newProduct = await Product.findOneAndUpdate(
+                        { url: amazonData.url },
+                        product,
+                        { upsert: true, new: true }
+                    );
+                }
+            } catch (error) {
+                
+            }
         }
 
-        // Upsert the product into the database
-        const newProduct = await Product.findOneAndUpdate(
-            { url: amazonData.url },
-            product,
-            { upsert: true, new: true }
-        );
+        if(flipkartUrl){
+            try {
+                const flipkartData = await scrapeFlipkartProduct(flipkartUrl);
+                let product = flipkartData;
 
-        // Respond with the newly stored or updated product
+                if(!flipkartData.outOfStock && flipkartData.price != 0){
+                    const existingProduct = await Product.findOne({ url: flipkartData.url });
+                    if (existingProduct) {
+                        const updatedPriceHistory = [
+                            ...existingProduct.priceHistory,
+                            { price: flipkartData.price }
+                        ];
+
+                        product = {
+                            ...flipkartData,
+                            priceHistory: updatedPriceHistory,
+                            lowestPrice: getLowestPrice(updatedPriceHistory),
+                            highestPrice: getHighestPrice(updatedPriceHistory),
+                            averagePrice: getAveragePrice(updatedPriceHistory),
+                        };
+                    }
+
+                    const newProduct = await Product.findOneAndUpdate(
+                        { url: flipkartData.url },
+                        product,
+                        { upsert: true, new: true }
+                    );
+                }
+            } catch (error) {
+                
+            }
+        }
+
         res.status(200).json({
-            message: 'Product data successfully stored or updated',
-            product: newProduct
+            status: 'success',
         });
     } catch (error) {
         res.status(500).json({
-            message: 'Error occurred while scraping or storing product',
+            status: 'Error occurred while scraping or storing product',
             error: error.message,
         });
     }
