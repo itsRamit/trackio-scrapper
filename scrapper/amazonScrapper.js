@@ -1,6 +1,7 @@
 require('dotenv').config({ path: './.env' }); 
 const axios = require('axios');
 const cheerio = require('cheerio');
+const http = require('http');
 
 async function scrapeAmazonProduct(url){
     if(!url) return;

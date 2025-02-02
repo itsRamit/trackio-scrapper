@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-    url: {type: String, require: true, unique: true},
-    platform: {type: String, require: true},
+    url: {type: String, required: true, unique: true},
+    platform: {type: String, required: true},
     image: {type: String, required: true},
     title: {type: String, required: true},
     price: {type: Number, required: true},
@@ -17,10 +17,12 @@ const productSchema = new mongoose.Schema({
     averagePrice: {type: Number},
     isOutOfStock: {type: Boolean, default: false},
     users: [
-        {email: {type:String, required: true}}
-    ], default: [],
-
+        {
+            email: {type: String, required: true},
+            targetPrice: {type: Number, required: false},
+        }
+    ],
 }, {timestamps: true});
 
-const Product = mongoose.models.Product || mongoose.model('Product',productSchema);
-module.exports ={Product};
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+module.exports = {Product};

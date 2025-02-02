@@ -2,7 +2,7 @@ const { scrapeAmazonProduct } = require('../scrapper/amazonScrapper');
 const { scrapeFlipkartProduct } = require('../scrapper/flipkartScrapper');
 const { connectToDB } = require('../config/db');
 const { Product } = require('../model/productModel');
-const { getLowestPrice, getAveragePrice, getHighestPrice } = require('../utils');
+const { getLowestPrice, getAveragePrice, getHighestPrice } = require('../utils/utils');
 
 const scrapeAndStoreProduct = async (req, res) => {
     const { amazonUrl, flipkartUrl } = req.body; 
@@ -91,4 +91,34 @@ const scrapeAndStoreProduct = async (req, res) => {
     }
 };
 
-module.exports = { scrapeAndStoreProduct };
+const scrapeProduct = async (req, res) => {
+    const { amazonUrl, flipkartUrl } = req.body;
+
+    if (!amazonUrl && !flipkartUrl) {
+        return res.status(400).json({ message: 'At least one product URL is required' });
+    }
+
+    try {
+        let response = { status: 'success', products: [] };
+        
+        if (amazonUrl && amazonUrl.includes('amazon')) {
+            const amazonData = await scrapeAmazonProduct(amazonUrl);
+            response.products.push({ source: 'Amazon', data: amazonData });
+        }
+        
+        if (flipkartUrl && flipkartUrl.includes('flipkart')) {
+            const flipkartData = await scrapeFlipkartProduct(flipkartUrl);
+            response.products.push({ source: 'Flipkart', data: flipkartData });
+        }
+
+        return res.status(200).json(response);
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error occurred while scraping product',
+            error: error.message,
+        });
+    }
+};
+
+module.exports = { scrapeAndStoreProduct, scrapeProduct};
