@@ -5,7 +5,7 @@ const { Product } = require('../model/productModel');
 const { getLowestPrice, getAveragePrice, getHighestPrice } = require('../utils/utils');
 
 const scrapeAndStoreProduct = async (req, res) => {
-    const { amazonUrl, flipkartUrl } = req.body; 
+    const { amazonUrl, flipkartUrl, emailId, thresholdPrice } = req.body;
 
     if (!amazonUrl && !flipkartUrl) {
         return res.status(400).json({ message: 'Product URL is required' });
@@ -14,13 +14,14 @@ const scrapeAndStoreProduct = async (req, res) => {
     try {
         connectToDB();
 
-        if(amazonUrl){
+        if (amazonUrl) {
             try {
                 const amazonData = await scrapeAmazonProduct(amazonUrl);
                 let product = amazonData;
 
-                if(!amazonData.outOfStock && amazonData.price != 0){
+                if (!amazonData.outOfStock && amazonData.price !== 0) {
                     const existingProduct = await Product.findOne({ url: amazonData.url });
+
                     if (existingProduct) {
                         const updatedPriceHistory = [
                             ...existingProduct.priceHistory,
@@ -33,27 +34,31 @@ const scrapeAndStoreProduct = async (req, res) => {
                             lowestPrice: getLowestPrice(updatedPriceHistory),
                             highestPrice: getHighestPrice(updatedPriceHistory),
                             averagePrice: getAveragePrice(updatedPriceHistory),
+                            users: updateUsersList(existingProduct.users, emailId, thresholdPrice)
                         };
+                    } else {
+                        product.users = [{ email: emailId, targetPrice: thresholdPrice }];
                     }
 
-                    const newProduct = await Product.findOneAndUpdate(
+                    await Product.findOneAndUpdate(
                         { url: amazonData.url },
                         product,
                         { upsert: true, new: true }
                     );
                 }
             } catch (error) {
-                
+                console.error('Error scraping Amazon:', error);
             }
         }
 
-        if(flipkartUrl){
+        if (flipkartUrl) {
             try {
                 const flipkartData = await scrapeFlipkartProduct(flipkartUrl);
                 let product = flipkartData;
 
-                if(!flipkartData.outOfStock && flipkartData.price != 0){
+                if (!flipkartData.outOfStock && flipkartData.price !== 0) {
                     const existingProduct = await Product.findOne({ url: flipkartData.url });
+
                     if (existingProduct) {
                         const updatedPriceHistory = [
                             ...existingProduct.priceHistory,
@@ -66,23 +71,25 @@ const scrapeAndStoreProduct = async (req, res) => {
                             lowestPrice: getLowestPrice(updatedPriceHistory),
                             highestPrice: getHighestPrice(updatedPriceHistory),
                             averagePrice: getAveragePrice(updatedPriceHistory),
+                            users: updateUsersList(existingProduct.users, emailId, thresholdPrice)
                         };
+                    } else {
+                        product.users = [{ email: emailId, targetPrice: thresholdPrice }];
                     }
 
-                    const newProduct = await Product.findOneAndUpdate(
+                    await Product.findOneAndUpdate(
                         { url: flipkartData.url },
                         product,
                         { upsert: true, new: true }
                     );
                 }
             } catch (error) {
-                
+                console.error('Error scraping Flipkart:', error);
             }
         }
 
-        res.status(200).json({
-            status: 'success',
-        });
+        res.status(200).json({ status: 'success' });
+
     } catch (error) {
         res.status(500).json({
             status: 'Error occurred while scraping or storing product',
@@ -90,6 +97,20 @@ const scrapeAndStoreProduct = async (req, res) => {
         });
     }
 };
+
+// Helper function to update the users list
+const updateUsersList = (existingUsers, emailId, thresholdPrice) => {
+    if (!emailId) return existingUsers;
+
+    const userExists = existingUsers.some(user => user.email === emailId);
+
+    if (!userExists) {
+        return [...existingUsers, { email: emailId, targetPrice: thresholdPrice }];
+    }
+
+    return existingUsers;
+};
+
 
 const scrapeProduct = async (req, res) => {
     const { amazonUrl, flipkartUrl } = req.body;
