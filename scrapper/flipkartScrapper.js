@@ -1,7 +1,8 @@
-require('dotenv').config({ path: './.env' }); 
+require('dotenv').config({ path: './.env' });
 const axios = require('axios');
 const cheerio = require('cheerio');
 const http = require('http');
+const https = require('https');
 
 async function scrapeFlipkartProduct(url) {
     if (!url) return;
@@ -13,13 +14,18 @@ async function scrapeFlipkartProduct(url) {
 
     const proxy = `http://${username}-session-${session_id}:${password}@brd.superproxy.io:${port}`;
 
+    const httpsAgent = new https.Agent({
+        rejectUnauthorized: false // ✅ Disables SSL verification
+    });
+
     try {
         const response = await axios.get(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
             },
-            proxy: false, 
-            httpAgent: new http.Agent({ proxy }),
+            proxy: false, // Prevents axios' default proxy settings from interfering
+            httpAgent: new http.Agent({ proxy }), // Uses Bright Data proxy
+            httpsAgent: httpsAgent // ✅ Fixes SSL certificate issue
         });
 
         const $ = cheerio.load(response.data);
