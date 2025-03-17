@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const corsOptions = {
-  origin: "http://127.0.0.1:5500",
+  origin: "https://www.trackio.me/",
   methods: "GET, POST, PUT, DELETE",
   allowedHeaders: "Content-Type, Authorization",
 };

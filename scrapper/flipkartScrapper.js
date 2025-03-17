@@ -20,22 +20,26 @@ async function scrapeFlipkartProduct(url) {
     try {
         await page.goto(url, { waitUntil: 'networkidle2' });
 
-        const title = await page.$eval('.VU-ZEz', el => el.innerText.trim());
-        const price = await page.$eval('.Nx9bqj.CxhGGd', el => el.innerText.trim().replace(/₹|,/g, ''));
-        const outOfStock = await page.$eval(".QqFHMw.AMnSvF.v6sqKe", el => el.innerText.trim().toLowerCase() === 'notify me');
-        const imageUrl = await page.$eval('img.DByuf4.IZexXJ.jLEJ7H', img => img.src);
-        const data = {
-            url,
-            platform: "flipkart",
-            title,
-            price: parseInt(price, 10),
-            image: imageUrl,
-            priceHistory: [],
-            outOfStock,
-            lowestPrice: parseInt(price, 10),
-            highestPrice: parseInt(price, 10),
-            averagePrice: parseInt(price, 10),
-        };
+        const data = await page.evaluate((url) => {
+            const title = document.querySelector(".VU-ZEz")?.innerText.trim() || "N/A";
+            const priceText = document.querySelector(".Nx9bqj.CxhGGd")?.innerText.replace(/₹|,/g, "").trim() || "0";
+            const price = parseInt(priceText, 10);
+            const outOfStock = document.querySelector(".QqFHMw.AMnSvF.v6sqKe")?.innerText.toLowerCase().trim() === "notify me";
+            const imageUrl = document.querySelector("img.DByuf4.IZexXJ.jLEJ7H")?.src || document.querySelector("img._53J4C-.utBuJY")?.src || "";
+
+            return {
+                url,
+                platform: "flipkart",
+                title,
+                price,
+                image: imageUrl,
+                priceHistory: [],
+                outOfStock,
+                lowestPrice: price,
+                highestPrice: price,
+                averagePrice: price,
+            };
+        }, url);
 
         console.log(data);
         return data;
