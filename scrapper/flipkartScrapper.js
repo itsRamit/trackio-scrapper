@@ -1,49 +1,46 @@
-require('dotenv').config({ path: './.env' });
 const puppeteer = require('puppeteer');
 
 async function scrapeFlipkartProduct(url) {
     if (!url) return;
 
     const browser = await puppeteer.launch({
-        headless: "new",
+        headless: 'new', 
         args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-blink-features=AutomationControlled"
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-features=IsolateOrigins,site-per-process'
         ]
     });
 
     const page = await browser.newPage();
-    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
 
     try {
-        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await page.goto(url, { waitUntil: 'networkidle2' });
 
-        const data = await page.evaluate((url) => {
-            const title = document.querySelector(".VU-ZEz")?.innerText.trim() || "N/A";
-            const priceText = document.querySelector(".Nx9bqj.CxhGGd")?.innerText.replace(/₹|,/g, "").trim() || "0";
-            const price = parseInt(priceText, 10);
-            const outOfStock = document.querySelector(".QqFHMw.AMnSvF.v6sqKe")?.innerText.toLowerCase().trim() === "notify me";
-            const imageUrl = document.querySelector("img.DByuf4.IZexXJ.jLEJ7H")?.src || document.querySelector("img._53J4C-.utBuJY")?.src || "";
-
-            return {
-                url,
-                platform: "flipkart",
-                title,
-                price,
-                image: imageUrl,
-                priceHistory: [],
-                outOfStock,
-                lowestPrice: price,
-                highestPrice: price,
-                averagePrice: price,
-            };
-        }, url);
+        const title = await page.$eval('.VU-ZEz', el => el.innerText.trim());
+        const price = await page.$eval('.Nx9bqj.CxhGGd', el => el.innerText.trim().replace(/₹|,/g, ''));
+        const outOfStock = await page.$eval(".QqFHMw.AMnSvF.v6sqKe", el => el.innerText.trim().toLowerCase() === 'notify me');
+        const imageUrl = await page.$eval('img.DByuf4.IZexXJ.jLEJ7H', img => img.src);
+        const data = {
+            url,
+            platform: "flipkart",
+            title,
+            price: parseInt(price, 10),
+            image: imageUrl,
+            priceHistory: [],
+            outOfStock,
+            lowestPrice: parseInt(price, 10),
+            highestPrice: parseInt(price, 10),
+            averagePrice: parseInt(price, 10),
+        };
 
         console.log(data);
         return data;
     } catch (error) {
-        console.error("Error:", error.message);
+        console.error("Scraping Error:", error.message);
         throw error;
     } finally {
         await browser.close();
