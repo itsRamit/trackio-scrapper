@@ -26,11 +26,12 @@ async function scrapeFlipkartProduct(url) {
             const price = parseInt(priceText, 10);
             const outOfStock = document.querySelector(".QqFHMw.AMnSvF.v6sqKe")?.innerText.toLowerCase().trim() === "notify me";
             const imageUrl = document.querySelector("img.DByuf4.IZexXJ.jLEJ7H")?.src || document.querySelector("img._53J4C-.utBuJY")?.src || "";
-
+            const description = document.querySelector(".yN+eNk")?.innerText.trim() || document.querySelector(".yN+eNk.w9jEaj")?.innerText.trim() || document.querySelector("._4aGEkW")?.innerText.trim() || "N/A"; 
             return {
                 url,
                 platform: "flipkart",
                 title,
+                description,
                 price,
                 image: imageUrl,
                 priceHistory: [],
@@ -50,5 +51,4 @@ async function scrapeFlipkartProduct(url) {
         await browser.close();
     }
 }
-
 module.exports = { scrapeFlipkartProduct };

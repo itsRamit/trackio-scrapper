@@ -1,4 +1,4 @@
-const cron = require('node-cron');
+// const cron = require('node-cron');
 const { Product } = require('../model/productModel');
 const { scrapeAmazonProduct } = require('../scrapper/amazonScrapper');
 const { scrapeFlipkartProduct } = require('../scrapper/flipkartScrapper');
@@ -73,6 +73,6 @@ const updateProductPrices = async () => {
 };
 
 // Schedule the cron job to run every hour
-cron.schedule('0 * * * *', updateProductPrices);
+// cron.schedule('0 * * * *', updateProductPrices);
 
 module.exports = { updateProductPrices };
