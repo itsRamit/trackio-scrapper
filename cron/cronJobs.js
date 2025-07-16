@@ -66,7 +66,7 @@ const updateProductPrices = async () => {
                 await product.save();
             }
         }
-        console.log('Product prices updated successfully.');
+        console.log(Products.length + ' products updated successfully');    
     } catch (error) {
         console.error('Error updating product prices:', error.message);
     }

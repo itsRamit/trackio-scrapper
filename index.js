@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const corsOptions = {
-  origin: "https://www.trackio.me", // Add dev origin too if needed
+  origin: "https://www.trackio.me",
   methods: "GET, POST, PUT, DELETE",
   allowedHeaders: "Content-Type, Authorization",
 };
@@ -17,7 +17,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Health check route (important for Azure)
 app.get("/", (req, res) => {
   res.send("Trackio backend is running!");
 });
@@ -26,18 +25,12 @@ connectToDB()
   .then(() => {
     console.log("✅ Database connected, starting the server...");
 
-    // API routes
-    app.use("/api", productRoutes);
 
-    // Start server with 0.0.0.0 to work on Azure
+    app.use("/api", productRoutes);
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
-
-    // Run scheduled price update
     updateProductPrices()
-      .then(() => console.log("🔄 Initial price update completed"))
-      .catch((err) => console.error("❌ Initial price update failed:", err));
   })
   .catch((err) => {
     console.error("❌ Failed to connect to database. Server will not start.", err);

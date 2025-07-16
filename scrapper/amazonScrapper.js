@@ -57,8 +57,6 @@ async function scrapeAmazonProduct(url) {
       highestPrice: numericPrice,
       averagePrice: numericPrice,
     };
-
-    console.log(data);
     return data;
   } catch (e) {
     console.error('Scraping Error:', e.message);

@@ -50,8 +50,6 @@ async function scrapeFlipkartProduct(url) {
       highestPrice: price,
       averagePrice: price,
     };
-
-    console.log(data);
     return data;
   } catch (error) {
     console.error('Scraping Error:', error.message);
