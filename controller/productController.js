@@ -113,6 +113,7 @@ const updateUsersList = (existingUsers, emailId, thresholdPrice) => {
 
 
 const scrapeProduct = async (req, res) => {
+    console.log("🛰 Incoming request body:", req.body);
     const { amazonUrl, flipkartUrl } = req.body;
 
     if (!amazonUrl && !flipkartUrl) {
